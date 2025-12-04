@@ -1,0 +1,50 @@
+# -------------------------
+# PYTHON VENV & BUILD FILES
+# -------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+build/
+dist/
+
+# -------------------------
+# EDITOR / OS FILES
+# -------------------------
+.DS_Store
+.vscode/
+.idea/
+
+# -------------------------
+# MODEL CHECKPOINTS & LARGE FILES
+# -------------------------
+models/
+*.pt
+*.pth
+*.ckpt
+
+# -------------------------
+# LOGS / OUTPUTS
+# -------------------------
+outputs/
+logs/
+wandb/
+
+# -------------------------
+# CACHE / TEMP FILES
+# -------------------------
+.cache/
+tmp/
+.temp/
+hf_cache/
+
+# -------------------------
+# DATASETS
+# DO NOT TRACK DOWNLOADED HF DATASETS
+# -------------------------
+datasets/
+data/
