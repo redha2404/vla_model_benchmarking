@@ -1,0 +1,119 @@
+import numpy as np
+from collections import Counter
+
+# ============================================================
+# CONFIG
+# ============================================================
+TOP_K = 200
+EXCLUDED_KEYWORDS = ["drawer", "rotate", "light", "lamp", "stack", "door"]
+
+# ============================================================
+# Utils
+# ============================================================
+def contains_excluded_keyword(task: str, keywords) -> bool:
+    task_lower = task.lower()
+    return any(kw in task_lower for kw in keywords)
+
+
+# ============================================================
+# Load TRAIN annotations
+# ============================================================
+ann_train = np.load(
+    "auto_lang_ann.npy",
+    allow_pickle=True
+).item()
+
+texts_train = ann_train["language"]["ann"]
+counter_train = Counter(texts_train)
+
+print("===== TOP 50 TASKS (TRAIN) =====")
+for task, count in counter_train.most_common(50):
+    print(f"{count:5d}  |  {task}")
+
+
+# ============================================================
+# Load VALIDATION annotations
+# ============================================================
+ann_val = np.load(
+    "auto_lang_ann_val.npy",
+    allow_pickle=True
+).item()
+
+texts_val = ann_val["language"]["ann"]
+counter_val = Counter(texts_val)
+
+print("\n===== TOP 50 TASKS (VALIDATION) =====")
+for task, count in counter_val.most_common(50):
+    print(f"{count:5d}  |  {task}")
+
+
+# ============================================================
+# All tasks (union)
+# ============================================================
+all_tasks = set(counter_train.keys()) | set(counter_val.keys())
+
+# ============================================================
+# Excluded tasks (for inspection)
+# ============================================================
+print("\n===== EXCLUDED TASKS (by keyword) =====")
+for task in sorted(all_tasks):
+    if contains_excluded_keyword(task, EXCLUDED_KEYWORDS):
+        print(task)
+
+
+# ============================================================
+# Rank tasks by TOTAL frequency (train + val)
+# ============================================================
+rows = []
+for task in all_tasks:
+    if contains_excluded_keyword(task, EXCLUDED_KEYWORDS):
+        continue
+
+    ct = counter_train.get(task, 0)
+    cv = counter_val.get(task, 0)
+    total = ct + cv
+    ratio = cv / ct if ct > 0 else 0.0
+
+    rows.append((task, ct, cv, total, ratio))
+
+# Sort by total occurrences (descending)
+rows.sort(key=lambda x: x[3], reverse=True)
+
+# Keep top-K
+rows = rows[:TOP_K]
+
+
+# ============================================================
+# Print ranked tasks
+# ============================================================
+print("\n===== TASKS RANKED BY TOTAL FREQUENCY (TRAIN + VAL) =====")
+print("train |  val  | total | val/train | task")
+print("-" * 100)
+
+for task, ct, cv, total, ratio in rows:
+    print(
+        f"{ct:5d} | {cv:5d} | {total:5d} | {ratio:9.3f} | {task}"
+    )
+
+
+# ============================================================
+# Optional: hard filter by minimum counts
+# ============================================================
+MIN_TRAIN = 15
+MIN_VAL = 5
+
+selected_tasks = [
+    task for task, ct, cv, total, ratio in rows
+    if ct >= MIN_TRAIN and cv >= MIN_VAL
+]
+
+print("\n===== FINAL SELECTED TASKS =====")
+print(f"Criteria: train >= {MIN_TRAIN}, val >= {MIN_VAL}")
+for task in selected_tasks:
+    print(
+        f"{counter_train.get(task, 0):5d} train | "
+        f"{counter_val.get(task, 0):5d} val | "
+        f"{task}"
+    )
+
+print(f"\nTotal selected tasks: {len(selected_tasks)}")
