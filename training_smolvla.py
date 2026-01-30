@@ -39,18 +39,23 @@ else:
     print("✅ No previous output dir found")
   
 # Training
-!lerobot-train \
+!cd lerobot && lerobot-train \
   --policy.path=lerobot/smolvla_base \
-  --dataset.repo_id=redha24/calvin_task_D_D_pick_push \
+  --dataset.repo_id=redha24/calvin_task_D_D_pick_place \
+  --dataset.root=/kaggle/working/calvin_task_D_D_pick_place \
   --rename_map='{"observation.images.front":"observation.images.camera1","observation.images.wrist":"observation.images.camera2"}' \
-  --batch_size=16 \
-  --steps=8000 \
-  --output_dir=outputs/train/smolvla_calvin_pick_push \
+  --batch_size=8 \
+  --log_freq=50 \
+  --steps=60000 \
+  --output_dir=outputs/train/smolvla_calvin_pick_place \
   --save_checkpoint=true \
-  --save_freq=500 \
+  --save_freq=2000 \
+  --policy.use_amp=true \
   --policy.device=cuda \
-  --wandb.enable=true \
-  --policy.repo_id=redha24/smolvla_calvin_pick_push
+  --policy.repo_id=redha24/smolvla_calvin_pick_place \
+  --job_name=smolvla_calvin_pick_place \
+  --policy.push_to_hub=true \
+  --resume=false
 
 # Create a model repo and push checkpoints (here 007500)
 from huggingface_hub import HfApi
